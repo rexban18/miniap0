@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PrimeAds Mini App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { 
+            --primary-bg: #ffffff; 
+            --primary-text: #1a1a1a; 
+            --secondary-text: #6b7280; 
+            --button-bg: #000000; 
+            --button-text: #ffffff; 
+            --divider-color: #e5e7eb; 
+            --accent-color: #10b981; 
+            --card-bg: #f9fafb; 
+            --active-color: #000000; 
+            --inactive-color: #9ca3af; 
+            --banana-color: #ffd700;
+            /* Telegram Theme Variables */
+            --tg-theme-bg-color: #ffffff;
+            --tg-theme-text-color: #1a1a1a;
+            --tg-theme-hint-color: #6b7280;
+            --tg-theme-button-color: #000000;
+            --tg-theme-button-text-color: #ffffff;
+            --tg-theme-secondary-bg-color: #f9fafb;
+        }
+        body { 
+            background-color: var(--tg-theme-bg-color); 
+            color: var(--tg-theme-text-color); 
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .elegant-heading { font-family: 'Cinzel', serif; font-weight: 600; }
+        .elegant-subheading { font-family: 'Playfair Display', serif; font-weight: 500; }
+        .elegant-body { font-family: 'Inter', sans-serif; }
+
+        /* Loading Screen */
+        #loadingPage { 
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--tg-theme-bg-color);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 1000;
+        }
+        .loader {
+            width: 48px; height: 48px;
+            border: 5px solid var(--tg-theme-button-color);
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            animation: rotation 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Main App */
+        #mainApp { display: none; padding-bottom: 90px; }
+        
+        .header { 
+            position: sticky; top: 0; 
+            background: var(--tg-theme-bg-color); 
+            padding: 16px; display: flex; align-items: center; justify-content: space-between; 
+            border-bottom: 1px solid var(--tg-theme-hint-color); 
+            z-index: 100; opacity: 0.95;
+        }
+        .header-left { display: flex; flex-direction: column; }
+        .balance-label { font-size: 12px; color: var(--tg-theme-hint-color); }
+        .balance-amount { font-size: 20px; font-weight: 700; font-family: 'Cinzel', serif; }
+        .header-center { flex: 1; text-align: center; }
+        .header-center h1 { font-size: 18px; font-family: 'Cinzel', serif; }
+        
+        .main-content { padding: 16px; }
+        .screen { display: none; animation: fadeIn 0.3s ease; }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { 
+            background: var(--tg-theme-secondary-bg-color); 
+            border-radius: 16px; padding: 20px; margin-bottom: 16px; 
+        }
+        .card-title { font-size: 18px; margin-bottom: 8px; font-family: 'Cinzel', serif; }
+        .card-description { color: var(--tg-theme-hint-color); font-size: 14px; margin-bottom: 16px; }
+        
+        .btn { 
+            display: flex; align-items: center; justify-content: center; 
+            width: 100%; padding: 14px; border: none; border-radius: 12px; 
+            font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 12px; 
+            font-family: 'Playfair Display', serif; transition: transform 0.1s;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); }
+        .btn-secondary { background: transparent; border: 1px solid var(--tg-theme-hint-color); color: var(--tg-theme-text-color); }
+
+        .stats-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+        .stat-card { background: var(--tg-theme-secondary-bg-color); border-radius: 12px; padding: 16px; text-align: center; }
+        .stat-value { font-size: 24px; font-weight: 700; margin-bottom: 4px; font-family: 'Cinzel', serif; }
+        .stat-label { color: var(--tg-theme-hint-color); font-size: 12px; }
+
+        /* Watch Screen */
+        .watch-screen { text-align: center; padding: 10px; }
+        .ad-container { 
+            background: var(--tg-theme-secondary-bg-color); border-radius: 12px; 
+            padding: 20px; margin-bottom: 20px; min-height: 200px; 
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+        }
+        .countdown-timer { font-size: 32px; font-weight: bold; color: var(--tg-theme-button-color); margin: 15px 0; font-family: 'Cinzel', serif; }
+        
+        /* Bottom Nav */
+        .bottom-nav { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            background: var(--tg-theme-bg-color); border-top: 1px solid var(--tg-theme-hint-color); 
+            display: flex; justify-content: space-around; padding: 10px 0; 
+            padding-bottom: max(10px, env(safe-area-inset-bottom)); z-index: 100; 
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; color: var(--tg-theme-hint-color); }
+        .nav-item.active { color: var(--tg-theme-button-color); }
+        .nav-icon { width: 24px; height: 24px; margin-bottom: 4px; }
+
+        /* Profile */
+        .profile-header { 
+            display: flex; align-items: center; margin-bottom: 20px; 
+            background: linear-gradient(135deg, var(--tg-theme-button-color) 0%, #0055ff 100%); 
+            border-radius: 16px; padding: 20px; color: white; 
+        }
+        .profile-avatar { 
+            width: 60px; height: 60px; border-radius: 50%; 
+            background: rgba(255,255,255,0.2); margin-right: 16px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-weight: 700; font-size: 24px; border: 2px solid rgba(255,255,255,0.4);
+            overflow: hidden;
+        }
+        .withdrawal-balance { font-size: 24px; font-weight: 700; text-align: center; margin-bottom: 15px; font-family: 'Cinzel', serif; }
+
+        /* Responsive */
+        @media (min-width: 600px) { 
+            .main-content, .header, .bottom-nav, #loadingPage { max-width: 480px; margin-left: auto; margin-right: auto; }
+            .bottom-nav { width: 480px; border-radius: 16px 16px 0 0; left: 50%; transform: translateX(-50%); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingPage">
+        <span class="loader"></span>
+        <h2 class="elegant-heading">PrimeAds</h2>
+        <p class="elegant-body" style="color: var(--tg-theme-hint-color); margin-top: 10px;">Connecting to Telegram...</p>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp">
+        <header class="header">
+            <div class="header-left">
+                <div class="balance-label elegant-body">Your Balance</div>
+                <div id="balanceAmount" class="balance-amount elegant-heading">₹0.00</div>
+            </div>
+            <div class="header-center"><h1 id="screenTitle" class="elegant-heading">Home</h1></div>
+            <div style="width: 24px;"></div>
+        </header>
+
+        <main class="main-content">
+            <!-- Home Screen -->
+            <div id="homeScreen" class="screen active">
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div id="adsWatchedStat" class="stat-value elegant-heading">0</div>
+                        <div class="stat-label elegant-body">Ads Watched</div>
+                    </div>
+                    <div class="stat-card">
+                        <div id="referralStat" class="stat-value elegant-heading">0</div>
+                        <div class="stat-label elegant-body">Referrals</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2 class="card-title elegant-heading">Watch Ads</h2>
+                    <p class="card-description elegant-body">Earn ₹0.50 for each ad you watch successfully.</p>
+                    <button id="watchAdsBtn" class="btn btn-primary elegant-subheading">
+                        <i class="fas fa-play-circle" style="margin-right: 8px; color: var(--banana-color);"></i>Start Watching
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <h2 class="card-title elegant-heading">Invite Friends</h2>
+                    <p class="card-description elegant-body">Earn ₹10 for each friend who joins via your link!</p>
+                    <button id="inviteFriendsBtn" class="btn btn-secondary elegant-subheading">
+                        <i class="fas fa-user-plus" style="margin-right: 8px; color: var(--banana-color);"></i>Get Referral Link
+                    </button>
+                </div>
+            </div>
+
+            <!-- Profile Screen -->
+            <div id="profileScreen" class="screen">
+                <div class="profile-header">
+                    <div class="profile-avatar elegant-heading" id="profileAvatar"></div>
+                    <div class="profile-info">
+                        <h2 class="elegant-heading" id="profileName"></h2>
+                        <p class="elegant-body" style="opacity: 0.9; word-break: break-all;" id="profileId">ID: ...</p>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="stats-cards" style="margin-bottom: 0;">
+                        <div class="stat-card">
+                            <div id="profileTotalEarnings" class="stat-value elegant-heading">₹0.00</div>
+                            <div class="stat-label elegant-body">Total Earnings</div>
+                        </div>
+                        <div class="stat-card">
+                            <div id="profileAdsWatched" class="stat-value elegant-heading">0</div>
+                            <div class="stat-label elegant-body">Ads Watched</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="withdrawal-section card">
+                    <h2 class="card-title">Withdraw Funds</h2>
+                    <div class="withdrawal-balance" id="withdrawalBalance">Available: ₹0.00</div>
+                    <p class="card-description elegant-body">Minimum withdrawal: ₹100. Requests sent to Admin.</p>
+                    <button id="withdrawBtn" class="btn btn-primary elegant-subheading">
+                        <i class="fas fa-wallet" style="margin-right: 8px; color: var(--banana-color);"></i>Request Withdrawal
+                    </button>
+                </div>
+            </div>
+
+            <!-- Watch Screen -->
+            <div id="watchScreen" class="screen">
+                <div class="watch-screen">
+                    <h2 class="elegant-heading">Watch Ad to Earn</h2>
+                    <p class="elegant-body">Watch the ad for 30 seconds to earn ₹0.50</p>
+                    <div class="ad-container" id="adContainer">
+                        <div id="adContent" style="display: none; width: 100%; height: 100%; border-radius: 12px;">
+                            <!-- Ad Banner Scripts Load Here -->
+                        </div>
+                        <div id="adPlaceholder" style="font-size: 18px; font-weight: 600; font-family: 'Cinzel', serif;">Ad Ready to Load...</div>
+                        
+                        <div class="countdown-timer" id="countdownTimer" style="display:none;">30</div>
+                        <p class="elegant-body" id="adMessage">Click below to start</p>
+                        
+                        <button id="startAdBtn" class="btn btn-primary" style="margin-top: 15px;">
+                            <i class="fas fa-play"></i> Load & Watch Ad
+                        </button>
+                        
+                        <button id="skipAdBtn" class="btn btn-secondary" style="margin-top:10px; display:none;">Skip Ad</button>
+                        <button id="watchAgainBtn" class="btn btn-primary" style="margin-top:10px; display:none;">Watch Another</button>
+                    </div>
+                    <button id="backToHomeBtn" class="btn btn-secondary" style="margin-top:20px;">
+                        <i class="fas fa-arrow-left"></i> Cancel
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <nav class="bottom-nav">
+            <div class="nav-item active" data-screen="homeScreen"><i class="fas fa-home nav-icon"></i></div>
+            <div class="nav-item" data-screen="profileScreen"><i class="fas fa-user nav-icon"></i></div>
+        </nav>
+    </div>
+
+    <!-- Ad Scripts (Hidden globally, only executed in Watch Screen) -->
+    <div id="adScriptsSource" style="display: none;">
+        <script type='text/javascript' src='//pl28015492.effectivegatecpm.com/bf/fb/37/bffb3715b0dff80a773acf9aa5c77438.js'><\/script>
+        <script type='text/javascript' src='//pl28015506.effectivegatecpm.com/c2/71/cc/c271ccf871b121258efd97b6bb9fc78f.js'><\/script>
+        <script async="async" data-cfasync="false" src="//pl28027543.effectivegatecpm.com/805e76c1d3ca97b185c3bfda399e7647/invoke.js"><\/script>
+        <div id="container-805e76c1d3ca97b185c3bfda399e7647"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tgScript = document.createElement('script');
+            tgScript.src = 'https://telegram.org/js/telegram-web-app.js';
+            tgScript.async = true;
+            document.head.appendChild(tgScript);
+
+            tgScript.onload = function() {
+                const tg = window.Telegram.WebApp;
+                tg.ready();
+                tg.expand();
+                
+                // Theme Support
+                if (tg.themeParams) {
+                    const root = document.documentElement;
+                    root.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color);
+                    root.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color);
+                    root.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color);
+                    root.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color);
+                    root.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color);
+                    root.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color);
+                }
+
+                const user = tg.initDataUnsafe.user;
+                if (!user) { alert("Open in Telegram"); return; }
+                
+                // Get Referrer Info (Start Parameter)
+                const startParam = tg.initDataUnsafe.start_param || "";
+
+                // Initialize
+                initializeApp(user, startParam);
+            };
+
+            // --- State ---
+            let currentUser = null;
+            let adReward = 0.50;
+            let referralBonus = 10.00;
+            let adDuration = 30;
+            let countdownInterval;
+            let isAdPlaying = false;
+            let adCompleted = false;
+
+            // --- App Logic ---
+            async function initializeApp(user, startParam) {
+                // Load or Create User
+                const storedUser = localStorage.getItem('primeads_user');
+                if (storedUser) {
+                    currentUser = JSON.parse(storedUser);
+                } else {
+                    currentUser = {
+                        id: user.id,
+                        name: user.first_name,
+                        username: user.username || '',
+                        balance: 0,
+                        ads_watched: 0,
+                        referrals: 0
+                    };
+                    localStorage.setItem('primeads_user', JSON.stringify(currentUser));
+                }
+
+                // Handle Referral Logic
+                if (startParam && startParam !== currentUser.id.toString()) {
+                    await handleReferral(startParam);
+                }
+
+                // Notify Backend/Admin of Login
+                sendLoginToAdmin(currentUser);
+
+                // UI Update
+                document.getElementById('loadingPage').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                updateUI();
+            }
+
+            async function handleReferral(referrerId) {
+                const notifiedKey = `primeads_ref_notified_${referrerId}`;
+                if (localStorage.getItem(notifiedKey)) return; // Already processed
+
+                // Award Bonus
+                currentUser.balance += referralBonus;
+                currentUser.referrals = (currentUser.referrals || 0) + 1;
+                localStorage.setItem('primeads_user', JSON.stringify(currentUser));
+
+                // Send Referral Details to Admin
+                const msg = (
+                    `🎉 <b>New Referral Detected!</b>\n\n`
+                    `👤 <b>User:</b> ${currentUser.name} (ID: ${currentUser.id})\n`
+                    `👥 <b>Referred by ID:</b> ${referrerId}\n`
+                    `💰 <b>Bonus Awarded:</b> ₹${referralBonus}\n`
+                    `🔗 <b>Total Referrals:</b> ${currentUser.referrals}`
+                );
+                
+                try {
+                    await fetch('/api/referral', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ message: msg })
+                    });
+                    localStorage.setItem(notifiedKey, 'true');
+                } catch (e) { console.error(e); }
+            }
+
+            async function sendLoginToAdmin(user) {
+                const msg = (
+                    `🔔 <b>User Login / Session Start</b>\n`
+                    `👤 Name: ${user.name}\n`
+                    `🆔 ID: <code>${user.id}</code>\n`
+                    `👤 Username: @${user.username || 'N/A'}\n`
+                    `💰 Balance: ₹${user.balance.toFixed(2)}`
+                );
+                try {
+                    await fetch('/api/login_notify', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ message: msg })
+                    });
+                } catch (e) {}
+            }
+
+            // --- Watch Ad Logic (Load only on Click) ---
+            const watchAdsBtn = document.getElementById('watchAdsBtn');
+            const startAdBtn = document.getElementById('startAdBtn');
+            const adContent = document.getElementById('adContent');
+            const adPlaceholder = document.getElementById('adPlaceholder');
+            const adMessage = document.getElementById('adMessage');
+
+            watchAdsBtn.addEventListener('click', () => {
+                navigateToScreen('watchScreen');
+                // Reset state
+                adCompleted = false;
+                isAdPlaying = false;
+                adContent.style.display = 'none';
+                adPlaceholder.style.display = 'block';
+                startAdBtn.style.display = 'flex';
+                document.getElementById('countdownTimer').style.display = 'none';
+                document.getElementById('skipAdBtn').style.display = 'none';
+                document.getElementById('watchAgainBtn').style.display = 'none';
+                adMessage.textContent = "Click below to start ad";
+            });
+
+            startAdBtn.addEventListener('click', () => {
+                // 1. Hide Button, Show Loader
+                startAdBtn.style.display = 'none';
+                adPlaceholder.textContent = "Loading Advertisement...";
+                
+                // 2. Inject Ad Scripts dynamically
+                adContent.innerHTML = document.getElementById('adScriptsSource').innerHTML;
+                adContent.style.display = 'block';
+                adPlaceholder.style.display = 'none';
+
+                // 3. Start Timer
+                startTimer();
+            });
+
+            function startTimer() {
+                isAdPlaying = true;
+                let timeLeft = adDuration;
+                const timerEl = document.getElementById('countdownTimer');
+                timerEl.style.display = 'block';
+                timerEl.textContent = timeLeft;
+                adMessage.textContent = `Please wait ${timeLeft} seconds`;
+
+                countdownInterval = setInterval(() => {
+                    timeLeft--;
+                    timerEl.textContent = timeLeft;
+                    adMessage.textContent = `Please wait ${timeLeft} seconds`;
+
+                    if (timeLeft <= 0) {
+                        clearInterval(countdownInterval);
+                        if (isAdPlaying && !adCompleted) {
+                            awardReward();
+                            // Show Success State
+                            timerEl.style.display = 'none';
+                            adContent.style.display = 'none';
+                            adPlaceholder.style.display = 'block';
+                            adPlaceholder.innerHTML = `<i class="fas fa-check-circle" style="font-size: 40px; color: var(--accent-color); margin-bottom: 10px;"></i><br>Reward Granted!`;
+                            adMessage.textContent = `You earned ₹${adReward.toFixed(2)}`;
+                            document.getElementById('watchAgainBtn').style.display = 'flex';
+                            document.getElementById('skipAdBtn').style.display = 'none';
+                            adCompleted = true;
+                        }
+                    }
+                }, 1000);
+            }
+
+            function awardReward() {
+                if (adCompleted) return;
+                currentUser.balance += adReward;
+                currentUser.ads_watched += 1;
+                localStorage.setItem('primeads_user', JSON.stringify(currentUser));
+                updateUI();
+                adCompleted = true;
+            }
+
+            // Reset Button logic
+            document.getElementById('backToHomeBtn').addEventListener('click', () => {
+                clearInterval(countdownInterval);
+                isAdPlaying = false;
+                adContent.innerHTML = ''; // Clear ads
+                navigateToScreen('homeScreen');
+            });
+
+            document.getElementById('watchAgainBtn').addEventListener('click', () => {
+                watchAdsBtn.click(); // Reset
+            });
+
+            document.getElementById('skipAdBtn').addEventListener('click', () => {
+                clearInterval(countdownInterval);
+                isAdPlaying = false;
+                alert("Ad Skipped. No reward.");
+                navigateToScreen('homeScreen');
+            });
+
+            // --- Withdrawal Logic ---
+            const withdrawBtn = document.getElementById('withdrawBtn');
+            withdrawBtn.addEventListener('click', async () => {
+                const minWithdraw = 100;
+                if (currentUser.balance < minWithdraw) {
+                    alert(`Minimum withdrawal is ₹${minWithdraw}. Current: ₹${currentUser.balance.toFixed(2)}`);
+                    return;
+                }
+
+                const amount = prompt(`Enter amount to withdraw (Max ₹${currentUser.balance.toFixed(2)}):`);
+                if (!amount || isNaN(amount) || parseFloat(amount) < minWithdraw || parseFloat(amount) > currentUser.balance) {
+                    alert("Invalid amount.");
+                    return;
+                }
+
+                const upiId = prompt("Enter your UPI ID (e.g., name@okhdfcbank):");
+                if (!upiId || !upiId.includes('@')) {
+                    alert("Invalid UPI ID.");
+                    return;
+                }
+
+                if (confirm(`Send ₹${amount} to ${upiId}?`)) {
+                    // Deduct locally immediately
+                    currentUser.balance -= parseFloat(amount);
+                    localStorage.setItem('primeads_user', JSON.stringify(currentUser));
+                    updateUI();
+
+                    // Send to Admin via Backend
+                    const msg = (
+                        `💸 <b>Withdrawal Request!</b>\n\n`
+                        `👤 <b>User:</b> ${currentUser.name}\n`
+                        `🆔 <b>ID:</b> ${currentUser.id}\n`
+                        `💰 <b>Amount:</b> ₹${parseFloat(amount).toFixed(2)}\n`
+                        `🏦 <b>UPI ID:</b> <code>${upiId}</code>\n\n`
+                        `⚠️ Please verify and process.`
+                    );
+                    
+                    try {
+                        await fetch('/api/withdraw', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({ message: msg })
+                        });
+                        alert("Withdrawal request sent to Admin!");
+                    } catch (e) {
+                        alert("Connection error. Try again.");
+                        // Refund locally if failed (optional logic)
+                    }
+                }
+            });
+
+            // --- Share / Referral Link ---
+            document.getElementById('inviteFriendsBtn').addEventListener('click', () => {
+                // Generate Deep Link: https://t.me/YourBot?start=USER_ID
+                const botUsername = "YourBotUsername"; // CHANGE THIS to your bot username without @
+                const deepLink = `https://t.me/${botUsername}?start=${currentUser.id}`;
+                
+                if (window.Telegram && window.Telegram.WebApp) {
+                    window.Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${deepLink}&text=Join PrimeAds and earn ₹10 bonus!`);
+                } else {
+                    alert("Share this link: " + deepLink);
+                }
+            });
+
+            // --- Navigation & UI ---
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                    item.classList.add('active');
+                    navigateToScreen(item.dataset.screen);
+                });
+            });
+
+            function navigateToScreen(screenId) {
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById(screenId).classList.add('active');
+                const title = screenId.replace('Screen', '').replace(/([A-Z])/g, ' $1').trim();
+                document.getElementById('screenTitle').textContent = title.charAt(0).toUpperCase() + title.slice(1);
+                window.scrollTo(0,0);
+            }
+
+            function updateUI() {
+                if (!currentUser) return;
+                const balanceText = `₹${currentUser.balance.toFixed(2)}`;
+                document.getElementById('balanceAmount').textContent = balanceText;
+                document.getElementById('adsWatchedStat').textContent = currentUser.ads_watched;
+                document.getElementById('referralStat').textContent = currentUser.referrals || 0;
+                
+                document.getElementById('profileName').textContent = currentUser.name;
+                document.getElementById('profileId').textContent = `ID: ${currentUser.id}`;
+                document.getElementById('profileTotalEarnings').textContent = balanceText;
+                document.getElementById('profileAdsWatched').textContent = currentUser.ads_watched;
+                document.getElementById('withdrawalBalance').textContent = `Available: ${balanceText}`;
+
+                const avatar = document.getElementById('profileAvatar');
+                if (currentUser.name) avatar.textContent = currentUser.name.charAt(0).toUpperCase();
+            }
+        });
+    </script>
+</body>
+</html>
